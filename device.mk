@@ -349,7 +349,8 @@ PRODUCT_PACKAGES += \
 # Display
 PRODUCT_PROPERTY_OVERRIDES += \
     debug.egl.hw=0 \
-    ro.opengles.version=196608
+    ro.opengles.version=196608 \
+    debug.egl.rive_workaround=1
 
 PRODUCT_PROPERTY_OVERRIDES += \
     debug.hwui.renderer=opengl \
@@ -530,6 +531,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.surface_flinger.enable_frame_rate_override=false \
     ro.surface_flinger.supports_background_blur=0 \
+    ro.surface_flinger.vsync_event_phase_offset_ns=7500000 \
+    ro.surface_flinger.vsync_sf_event_phase_offset_ns=5000000 \
     ro.surface_flinger.use_context_priority=true \
     ro.surface_flinger.max_frame_buffer_acquired_buffers=3 \
     ro.surface_flinger.has_wide_color_display=false \
@@ -573,7 +576,11 @@ PRODUCT_PROPERTY_OVERRIDES += \
 $(call inherit-product, build/make/target/product/go_defaults_512.mk)
 
 # Setup dalvik vm configs
-$(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)
+PRODUCT_PROPERTY_OVERRIDES += \
+    dalvik.vm.heapstartsize=16m \
+    dalvik.vm.heaptargetutilization=0.75 \
+    dalvik.vm.heapminfree=2m \
+    dalvik.vm.heapmaxfree=8m
 
 # Dalvik heap
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -641,3 +648,17 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Since ($SRC_TARGET)/product/generic.mk is included instead of full_base.mk the device config also need to
 #  pick up the default Android Platform product locale list
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_default.mk)
+
+# Cgroup and task_profiles for bfqio
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/cgroups.json:$(TARGET_COPY_OUT_VENDOR)/etc/cgroups.json \
+    $(LOCAL_PATH)/task_profiles.json:$(TARGET_COPY_OUT_VENDOR)/etc/task_profiles.json
+
+# Reduce log level to warnings
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.log.tag=W
+
+# eBPF-based LowMemoryKiller Daemon
+PRODUCT_PACKAGES += \
+    bpf_lmk \
+    marco
